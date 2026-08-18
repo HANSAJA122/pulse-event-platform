@@ -27,35 +27,35 @@ export default function BillingSettingsPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-2 flex flex-col gap-8">
           
-          <section className="bg-pulse-bg border border-pulse-slate/50 p-8 rounded-3xl relative overflow-hidden">
-            {!isConnected && <div className="absolute top-0 right-0 w-64 h-64 bg-pulse-cyan/10 blur-3xl pointer-events-none" />}
+          <section className="glass-panel p-8 rounded-[2rem] relative overflow-hidden">
+            {!isConnected && <div className="absolute top-0 right-0 w-64 h-64 bg-purple-600/20 blur-[100px] pointer-events-none mix-blend-screen" />}
             
-            <h2 className="text-2xl font-bold font-display mb-2">Stripe Connect</h2>
-            <p className="text-pulse-text/70 mb-6">
+            <h2 className="text-2xl font-bold font-display mb-2 text-white">Stripe Connect</h2>
+            <p className="text-white/70 mb-6">
               Connect your Stripe account to receive payouts directly from ticket sales. Pulse takes a 2% platform fee, significantly lower than competitors.
             </p>
 
             {isConnected ? (
-              <div className="flex flex-col gap-6 border-t border-pulse-slate/30 pt-6">
-                <div className="flex items-center gap-4 text-pulse-cyan font-bold">
-                  <span className="w-3 h-3 rounded-full bg-pulse-cyan animate-pulse-wave" />
+              <div className="flex flex-col gap-6 border-t border-white/10 pt-6">
+                <div className="flex items-center gap-4 text-green-400 font-bold">
+                  <span className="w-3 h-3 rounded-full bg-green-400 animate-pulse" />
                   Connected to Stripe
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-pulse-slate/10 border border-pulse-slate/30 rounded-xl p-4">
-                    <p className="text-sm text-pulse-text/50 uppercase font-bold tracking-widest mb-1">Available Balance</p>
-                    <p className="text-2xl font-mono">$1,240.00</p>
+                  <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                    <p className="text-sm text-white/50 uppercase font-bold tracking-widest mb-1">Available Balance</p>
+                    <p className="text-2xl font-mono text-white">$1,240.00</p>
                   </div>
-                  <div className="bg-pulse-slate/10 border border-pulse-slate/30 rounded-xl p-4">
-                    <p className="text-sm text-pulse-text/50 uppercase font-bold tracking-widest mb-1">Next Payout</p>
-                    <p className="text-2xl font-mono">Tomorrow</p>
+                  <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                    <p className="text-sm text-white/50 uppercase font-bold tracking-widest mb-1">Next Payout</p>
+                    <p className="text-2xl font-mono text-white">Tomorrow</p>
                   </div>
                 </div>
                 
                 <button 
                   onClick={() => setIsConnected(false)}
-                  className="w-full md:w-auto px-6 py-3 rounded-xl border border-pulse-slate hover:bg-pulse-slate/30 transition-colors font-medium mt-2"
+                  className="w-full md:w-auto px-6 py-3 rounded-xl border border-white/20 text-white/70 hover:bg-white/5 hover:text-white transition-colors font-medium mt-2"
                 >
                   Disconnect Account
                 </button>
@@ -64,10 +64,10 @@ export default function BillingSettingsPage() {
               <button 
                 onClick={handleConnect}
                 disabled={loading}
-                className="w-full md:w-auto px-8 py-4 rounded-xl bg-pulse-gradient text-pulse-bg font-bold shadow-[0_0_20px_rgba(94,234,212,0.15)] hover:shadow-[0_0_30px_rgba(94,234,212,0.3)] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full md:w-auto px-8 py-4 rounded-2xl bg-aurora-gradient text-white font-bold text-lg shadow-[0_0_30px_rgba(255,77,77,0.3)] hover:shadow-[0_0_40px_rgba(121,40,202,0.4)] transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {loading ? "Redirecting to Stripe..." : "Set up Payouts"}
-                {!loading && <span className="font-serif italic font-normal text-pulse-bg/80">via Stripe</span>}
+                {!loading && <span className="font-serif italic font-normal text-white/80">via Stripe</span>}
               </button>
             )}
           </section>
@@ -75,20 +75,20 @@ export default function BillingSettingsPage() {
         </div>
 
         <div className="flex flex-col gap-4">
-           <div className="p-6 border border-pulse-slate/50 bg-pulse-slate/10 rounded-2xl">
-            <h3 className="font-bold mb-4 font-display text-lg">Fee Breakdown</h3>
+           <div className="p-6 glass-panel rounded-2xl">
+            <h3 className="font-bold mb-4 font-display text-lg text-white">Fee Breakdown</h3>
             <ul className="space-y-3 text-sm">
-              <li className="flex justify-between border-b border-pulse-slate/30 pb-2">
-                <span className="text-pulse-text/70">Pulse Platform Fee</span>
-                <span className="font-bold text-pulse-cyan">2.0%</span>
+              <li className="flex justify-between border-b border-white/10 pb-2">
+                <span className="text-white/70">Pulse Platform Fee</span>
+                <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-500">2.0%</span>
               </li>
-              <li className="flex justify-between border-b border-pulse-slate/30 pb-2">
-                <span className="text-pulse-text/70">Stripe Processing</span>
-                <span className="font-mono">2.9% + 30¢</span>
+              <li className="flex justify-between border-b border-white/10 pb-2">
+                <span className="text-white/70">Stripe Processing</span>
+                <span className="font-mono text-white/90">2.9% + 30¢</span>
               </li>
               <li className="flex justify-between pt-2">
-                <span className="text-pulse-text/70">Free Tickets</span>
-                <span className="font-bold text-pulse-cyan">Always Free</span>
+                <span className="text-white/70">Free Tickets</span>
+                <span className="font-bold text-white">Always Free</span>
               </li>
             </ul>
           </div>
