@@ -1,0 +1,8 @@
+{
+  "Navigation": {
+    "home": "Home",
+    "discover": "Discover",
+    "login": "Log In",
+    "dashboard": "Dashboard"
+  }
+}

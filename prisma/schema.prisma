@@ -1,0 +1,238 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  username      String?   @unique
+  bio           String?
+  createdAt     DateTime  @default(now())
+  
+  accounts      Account[]
+  sessions      Session[]
+  teamMembers   TeamMember[]
+  rsvps         Rsvp[]
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String? @db.Text
+  access_token       String? @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String? @db.Text
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Team {
+  id            String    @id @default(cuid())
+  name          String
+  slug          String    @unique
+  logoUrl       String?
+  ownerId       String
+  createdAt     DateTime  @default(now())
+  
+  members       TeamMember[]
+  events        Event[]
+  webhooks      Webhook[]
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  COHOST
+  CHECKIN_STAFF
+}
+
+model TeamMember {
+  id            String    @id @default(cuid())
+  teamId        String
+  userId        String
+  role          Role
+  
+  team          Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([teamId, userId])
+}
+
+enum LocationType {
+  PHYSICAL
+  VIRTUAL
+  HYBRID
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+}
+
+model Event {
+  id            String    @id @default(cuid())
+  slug          String    @unique
+  title         String
+  description   String?   @db.Text
+  coverImageUrl String?
+  startAt       DateTime
+  endAt         DateTime
+  timezone      String
+  
+  locationType  LocationType
+  address       String?
+  virtualLink   String?
+  capacity      Int?
+  
+  ownerId       String
+  teamId        String?
+  parentEventId String?
+  status        EventStatus @default(DRAFT)
+  createdAt     DateTime  @default(now())
+  
+  team          Team?     @relation(fields: [teamId], references: [id])
+  parentEvent   Event?    @relation("EventSessions", fields: [parentEventId], references: [id])
+  sessions      Event[]   @relation("EventSessions")
+  
+  ticketTiers   TicketTier[]
+  registrationFields RegistrationField[]
+  rsvps         Rsvp[]
+  sponsors      Sponsor[]
+  promoters     Promoter[]
+}
+
+model TicketTier {
+  id            String    @id @default(cuid())
+  eventId       String
+  name          String
+  priceCents    Int
+  currency      String    @default("USD")
+  quantity      Int?
+  salesStartAt  DateTime?
+  salesEndAt    DateTime?
+  
+  event         Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  rsvps         Rsvp[]
+}
+
+model RegistrationField {
+  id            String    @id @default(cuid())
+  eventId       String
+  label         String
+  type          String    // short_text, long_text, select, checkbox, etc.
+  required      Boolean   @default(false)
+  options       Json?     // Used for select/multi-select
+  
+  event         Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  responses     RegistrationResponse[]
+}
+
+enum RsvpStatus {
+  PENDING
+  APPROVED
+  DECLINED
+  WAITLISTED
+}
+
+model Rsvp {
+  id            String    @id @default(cuid())
+  eventId       String
+  userId        String?
+  guestEmail    String
+  guestName     String
+  status        RsvpStatus @default(PENDING)
+  ticketTierId  String?
+  referralCode  String?
+  checkedInAt   DateTime?
+  checkedInOffline Boolean @default(false)
+  createdAt     DateTime  @default(now())
+  
+  event         Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user          User?     @relation(fields: [userId], references: [id])
+  ticketTier    TicketTier? @relation(fields: [ticketTierId], references: [id])
+  
+  responses     RegistrationResponse[]
+  checkinLogs   CheckinLog[]
+}
+
+model RegistrationResponse {
+  id            String    @id @default(cuid())
+  rsvpId        String
+  fieldId       String
+  value         String
+  
+  rsvp          Rsvp      @relation(fields: [rsvpId], references: [id], onDelete: Cascade)
+  field         RegistrationField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+}
+
+model Sponsor {
+  id            String    @id @default(cuid())
+  eventId       String
+  name          String
+  logoUrl       String?
+  tier          String    // e.g., Gold, Silver
+  link          String?
+  
+  event         Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+model Promoter {
+  id            String    @id @default(cuid())
+  eventId       String
+  name          String
+  referralCode  String    @unique
+  commissionPercent Float
+  
+  event         Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+model Webhook {
+  id            String    @id @default(cuid())
+  teamId        String
+  url           String
+  events        String[]  // e.g., ["rsvp.created", "ticket.purchased"]
+  
+  team          Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+}
+
+model CheckinLog {
+  id            String    @id @default(cuid())
+  rsvpId        String
+  deviceId      String
+  timestamp     DateTime
+  syncedAt      DateTime?
+  
+  rsvp          Rsvp      @relation(fields: [rsvpId], references: [id], onDelete: Cascade)
+}

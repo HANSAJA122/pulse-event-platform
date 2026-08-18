@@ -1,26 +1,70 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-pulse-bg: #0B0F1A;
+  --color-pulse-text: #EDEFF5;
+  --color-pulse-cyan: #5EEAD4;
+  --color-pulse-violet: #8B5CF6;
+  --color-pulse-amber: #F5A623;
+  --color-pulse-slate: #3A4256;
+  
+  --font-display: "Space Grotesk", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  
+  --animate-pulse-wave: pulse-wave 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@keyframes pulse-wave {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: .5;
+    transform: scale(1.05);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Custom base styles for dark mode only */
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+  
+  body {
+    background-color: var(--color-pulse-bg);
+    color: var(--color-pulse-text);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    font-weight: 700;
+  }
+
+  code, pre {
+    font-family: var(--font-mono);
+  }
+
+  /* Focus states */
+  *:focus-visible {
+    outline: 2px solid var(--color-pulse-cyan);
+    outline-offset: 2px;
+  }
+}
+
+/* Utilities for gradient and borders */
+@layer utilities {
+  .bg-pulse-gradient {
+    background: linear-gradient(135deg, var(--color-pulse-cyan), var(--color-pulse-violet));
+  }
+  .text-pulse-gradient {
+    background: linear-gradient(135deg, var(--color-pulse-cyan), var(--color-pulse-violet));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
 }

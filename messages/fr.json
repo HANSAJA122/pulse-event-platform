@@ -1,0 +1,8 @@
+{
+  "Navigation": {
+    "home": "Accueil",
+    "discover": "Découvrir",
+    "login": "Connexion",
+    "dashboard": "Tableau de bord"
+  }
+}
