@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { Link } from "@/i18n/routing";
 import { Users, QrCode, Settings, Clock, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { CopyLinkButton } from "@/components/CopyLinkButton";
 
 export default async function EventDashboard({ params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -73,6 +74,8 @@ export default async function EventDashboard({ params }: { params: Promise<{ id:
         >
           View Public Page
         </Link>
+        
+        <CopyLinkButton urlPath={`/en/event/${event.slug}`} />
       </div>
 
       {/* Stats Grid */}
