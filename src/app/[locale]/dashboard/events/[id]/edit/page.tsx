@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { Link } from "@/i18n/routing";
 import { prisma } from "@/lib/prisma";
 import { updateEvent } from "@/lib/actions/event";
+import { CopyLinkButton } from "@/components/dashboard/CopyLinkButton";
 
 export default async function EditEventPage({
   params,
@@ -31,7 +32,19 @@ export default async function EditEventPage({
         <Link href="/dashboard" className="text-pulse-text-muted hover:text-white transition-colors text-sm font-medium mb-4 inline-block">
           &larr; Back to Events
         </Link>
-        <h1 className="text-4xl font-display font-bold tracking-tight">Edit Event</h1>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <h1 className="text-4xl font-display font-bold tracking-tight">Edit Event</h1>
+          <div className="flex items-center gap-3">
+            <Link 
+              href={`/event/${event.slug}`} 
+              target="_blank" 
+              className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-medium transition-colors flex items-center gap-2 text-sm border border-white/10"
+            >
+              View Public Page
+            </Link>
+            <CopyLinkButton slug={event.slug} />
+          </div>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
