@@ -105,6 +105,8 @@ export async function submitRsvp(eventId: string, formData: FormData) {
             <p style="color: #999; font-size: 12px; text-align: center;">
               Powered by Pulse Event Platform
             </p>
+          </div>
+        `
       });
       
       // If Resend returns an error in the payload
