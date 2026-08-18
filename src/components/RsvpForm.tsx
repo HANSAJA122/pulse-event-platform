@@ -4,7 +4,7 @@ import { useState } from "react";
 import { submitRsvp } from "@/lib/actions/rsvp";
 import { createCheckoutSession } from "@/lib/actions/checkout";
 
-export function RsvpForm({ eventId, ticketTiers }: { eventId: string, ticketTiers?: any[] }) {
+export function RsvpForm({ eventId, ticketTiers, isSoldOut }: { eventId: string, ticketTiers?: any[], isSoldOut?: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
@@ -14,6 +14,7 @@ export function RsvpForm({ eventId, ticketTiers }: { eventId: string, ticketTier
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (isSoldOut) return;
     setStatus("loading");
     setErrorMsg("");
     
@@ -47,7 +48,14 @@ export function RsvpForm({ eventId, ticketTiers }: { eventId: string, ticketTier
     );
   }
 
-
+  if (isSoldOut) {
+    return (
+      <div className="w-full md:w-auto px-8 py-4 rounded-2xl bg-white/10 text-white/50 font-bold text-lg border border-white/10 text-center flex items-center justify-center gap-2">
+        <span className="w-2 h-2 rounded-full bg-red-500"></span>
+        Sold Out
+      </div>
+    );
+  }
 
   if (!isOpen) {
     return (

@@ -60,17 +60,30 @@ export default function NewEventPage() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-3">
-          <label className="font-bold text-white tracking-tight">Location Type</label>
-          <div className="relative">
-            <select name="locationType" className="w-full py-3 px-4 rounded-xl bg-black/50 border border-white/10 focus:outline-none focus:border-white/30 transition-colors appearance-none text-white/90">
-              <option value="PHYSICAL">Physical Location</option>
-              <option value="VIRTUAL">Virtual (Zoom, Google Meet)</option>
-              <option value="HYBRID">Hybrid</option>
-            </select>
-            <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-white/50">
-              ▼
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="flex flex-col gap-3">
+            <label className="font-bold text-white tracking-tight">Location Type</label>
+            <div className="relative">
+              <select name="locationType" className="w-full py-3 px-4 rounded-xl bg-black/50 border border-white/10 focus:outline-none focus:border-white/30 transition-colors appearance-none text-white/90">
+                <option value="PHYSICAL">Physical Location</option>
+                <option value="VIRTUAL">Virtual (Zoom, Google Meet)</option>
+                <option value="HYBRID">Hybrid</option>
+              </select>
+              <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-white/50">
+                ▼
+              </div>
             </div>
+          </div>
+          
+          <div className="flex flex-col gap-3">
+            <label className="font-bold text-white tracking-tight">Capacity (Optional)</label>
+            <input 
+              type="number" 
+              name="capacity"
+              min="1"
+              placeholder="e.g. 100"
+              className="w-full py-3 px-4 rounded-xl bg-black/50 border border-white/10 focus:outline-none focus:border-white/30 transition-colors text-white/90 placeholder:text-white/20"
+            />
           </div>
         </div>
 

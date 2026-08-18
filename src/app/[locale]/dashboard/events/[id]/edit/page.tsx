@@ -88,6 +88,18 @@ export default async function EditEventPage({
               </div>
 
               <div className="flex flex-col gap-3">
+                <label className="font-bold text-white tracking-tight">Capacity (Optional)</label>
+                <input 
+                  type="number" 
+                  name="capacity"
+                  min="1"
+                  defaultValue={event.capacity?.toString() || ""}
+                  placeholder="e.g. 100"
+                  className="w-full py-3 px-4 rounded-xl bg-black/50 border border-white/10 focus:outline-none focus:border-white/30 transition-colors text-white/90 placeholder:text-white/20"
+                />
+              </div>
+
+              <div className="flex flex-col gap-3">
                 <label className="font-bold text-white tracking-tight">Description</label>
                 <textarea 
                   name="description"

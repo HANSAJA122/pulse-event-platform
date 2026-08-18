@@ -17,6 +17,8 @@ export async function createEvent(formData: FormData) {
   const startAt = new Date(formData.get("startAt") as string);
   const endAt = new Date(formData.get("endAt") as string);
   const locationType = formData.get("locationType") as LocationType;
+  const capacityStr = formData.get("capacity") as string;
+  const capacity = capacityStr ? parseInt(capacityStr) : null;
 
   // Generate a basic slug
   const baseSlug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
@@ -32,13 +34,14 @@ export async function createEvent(formData: FormData) {
       endAt,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, // Default to server timezone for now
       locationType,
+      capacity,
       ownerId: session.user.id,
       status: "PUBLISHED" // Default to published so they see it immediately for testing
     }
   });
 
   revalidatePath("/dashboard");
-  redirect(`/dashboard/events/${event.id}/edit`);
+  redirect(`/dashboard/events/${event.id}`);
 }
 
 export async function updateEvent(eventId: string, formData: FormData) {
@@ -51,6 +54,8 @@ export async function updateEvent(eventId: string, formData: FormData) {
   const description = formData.get("description") as string;
   const startAt = new Date(formData.get("startAt") as string);
   const endAt = new Date(formData.get("endAt") as string);
+  const capacityStr = formData.get("capacity") as string;
+  const capacity = capacityStr ? parseInt(capacityStr) : null;
 
   await prisma.event.update({
     where: { id: eventId },
@@ -59,6 +64,7 @@ export async function updateEvent(eventId: string, formData: FormData) {
       description,
       startAt,
       endAt,
+      capacity,
     }
   });
 

@@ -22,6 +22,20 @@ export async function submitRsvp(eventId: string, formData: FormData) {
     return { error: "Event not found" };
   }
 
+  // Check capacity if one is set
+  if (event.capacity !== null) {
+    const currentRsvpsCount = await prisma.rsvp.count({
+      where: { 
+        eventId: event.id,
+        status: { in: ["APPROVED", "PENDING"] }
+      }
+    });
+
+    if (currentRsvpsCount >= event.capacity) {
+      return { error: "Limit reached! This event is at full capacity." };
+    }
+  }
+
   // Find the ticket tier if provided, or default to the first free one
   let ticketTier = null;
   if (ticketTierId) {
