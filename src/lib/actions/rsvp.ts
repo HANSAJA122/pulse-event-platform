@@ -13,7 +13,7 @@ export async function submitRsvp(eventId: string, formData: FormData) {
   const ticketTierId = formData.get("ticketTierId") as string | null;
 
   if (!guestName || !guestEmail) {
-    throw new Error("Name and email are required");
+    return { error: "Name and email are required" };
   }
 
   // Find the event
@@ -22,7 +22,7 @@ export async function submitRsvp(eventId: string, formData: FormData) {
   });
 
   if (!event) {
-    throw new Error("Event not found");
+    return { error: "Event not found" };
   }
 
   // Find the ticket tier if provided, or default to the first free one
@@ -51,7 +51,7 @@ export async function submitRsvp(eventId: string, formData: FormData) {
     if (existingRsvp.status === "PENDING" && existingRsvp.ticketTierId) {
        return { success: true, requiresPayment: true, rsvpId: existingRsvp.id };
     }
-    throw new Error("You have already RSVP'd to this event!");
+    return { error: "You have already RSVP'd to this event!" };
   }
 
   // Create RSVP

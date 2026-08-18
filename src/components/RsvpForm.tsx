@@ -24,11 +24,16 @@ export function RsvpForm({ eventId, ticketTiers }: { eventId: string, ticketTier
       }
       
       const res = await submitRsvp(eventId, formData);
-      setStatus("success");
+      if (res.error) {
+        setStatus("error");
+        setErrorMsg(res.error);
+      } else {
+        setStatus("success");
+      }
     } catch (err: any) {
       console.error(err);
       setStatus("error");
-      setErrorMsg(err.message || "Failed to RSVP. Please try again.");
+      setErrorMsg("Failed to RSVP. Please try again.");
     }
   };
 
