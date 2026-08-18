@@ -68,4 +68,18 @@
     background: var(--color-pulse-glass-hover);
     border-color: rgba(255, 255, 255, 0.2);
   }
+
+  /* Premium Aurora Gradients */
+  .bg-aurora-gradient {
+    background: linear-gradient(135deg, #FF4D4D 0%, #F9CB28 50%, #7928CA 100%);
+  }
+  .bg-aurora-gradient-subtle {
+    background: linear-gradient(135deg, rgba(255,77,77,0.15) 0%, rgba(249,203,40,0.15) 50%, rgba(121,40,202,0.15) 100%);
+  }
+  .text-aurora-gradient {
+    background: linear-gradient(135deg, #FF4D4D 0%, #F9CB28 50%, #7928CA 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
 }
