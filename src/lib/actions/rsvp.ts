@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import nodemailer from "nodemailer";
+import { generateGoogleWalletLink } from "@/lib/wallet";
 
 export async function submitRsvp(eventId: string, formData: FormData) {
   const guestName = formData.get("guestName") as string;
@@ -93,6 +94,11 @@ export async function submitRsvp(eventId: string, formData: FormData) {
       },
     });
 
+    const googleWalletLink = generateGoogleWalletLink(
+      { title: event.title, startAt: event.startAt, locationType: event.locationType },
+      { id: rsvp.id, guestName: rsvp.guestName }
+    );
+
     let htmlContent = "";
     let subject = "";
 
@@ -114,6 +120,14 @@ export async function submitRsvp(eventId: string, formData: FormData) {
       `;
     } else {
       subject = `Your Ticket to ${event.title}`;
+      const walletBadgeHtml = googleWalletLink ? `
+        <div style="margin-top: 20px;">
+          <a href="${googleWalletLink}" target="_blank">
+            <img src="https://wallet.google/images/assets/en_US/google-wallet-badge.png" alt="Add to Google Wallet" height="48" />
+          </a>
+        </div>
+      ` : "";
+
       htmlContent = `
         <div style="font-family: sans-serif; max-w: 600px; margin: 0 auto; padding: 20px;">
           <h1 style="color: #111;">You're going to ${event.title}!</h1>
@@ -123,6 +137,7 @@ export async function submitRsvp(eventId: string, formData: FormData) {
           <div style="text-align: center; margin: 40px 0;">
             <img src="https://quickchart.io/qr?text=${rsvp.id}&size=400" width="200" height="200" alt="Your Ticket QR Code" style="border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);" />
             <p style="font-family: monospace; color: #888; margin-top: 10px;">${rsvp.id}</p>
+            ${walletBadgeHtml}
           </div>
           <p style="color: #999; font-size: 12px; text-align: center;">
             Powered by Pulse Event Platform
