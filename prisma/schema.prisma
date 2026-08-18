@@ -63,11 +63,13 @@ model Team {
   slug          String    @unique
   logoUrl       String?
   ownerId       String
+  stripeConnectAccountId String?
   createdAt     DateTime  @default(now())
   
   members       TeamMember[]
   events        Event[]
   webhooks      Webhook[]
+  invitations   TeamInvitation[]
 }
 
 enum Role {
@@ -87,6 +89,19 @@ model TeamMember {
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@unique([teamId, userId])
+}
+
+model TeamInvitation {
+  id            String    @id @default(cuid())
+  teamId        String
+  email         String
+  role          Role
+  token         String    @unique
+  expires       DateTime
+  
+  team          Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  @@unique([teamId, email])
 }
 
 enum LocationType {
@@ -142,6 +157,7 @@ model TicketTier {
   quantity      Int?
   salesStartAt  DateTime?
   salesEndAt    DateTime?
+  stripePriceId String?
   
   event         Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
   rsvps         Rsvp[]
@@ -177,6 +193,7 @@ model Rsvp {
   referralCode  String?
   checkedInAt   DateTime?
   checkedInOffline Boolean @default(false)
+  stripeSessionId String?
   createdAt     DateTime  @default(now())
   
   event         Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)

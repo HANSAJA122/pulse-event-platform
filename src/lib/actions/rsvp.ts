@@ -10,6 +10,7 @@ const resend = new Resend(process.env.RESEND_API_KEY || "re_mock_key_123");
 export async function submitRsvp(eventId: string, formData: FormData) {
   const guestName = formData.get("guestName") as string;
   const guestEmail = formData.get("guestEmail") as string;
+  const ticketTierId = formData.get("ticketTierId") as string | null;
 
   if (!guestName || !guestEmail) {
     throw new Error("Name and email are required");
@@ -24,12 +25,31 @@ export async function submitRsvp(eventId: string, formData: FormData) {
     throw new Error("Event not found");
   }
 
+  // Find the ticket tier if provided, or default to the first free one
+  let ticketTier = null;
+  if (ticketTierId) {
+    ticketTier = await prisma.ticketTier.findUnique({
+      where: { id: ticketTierId }
+    });
+  } else {
+    // Just find any ticket tier (useful if we haven't built ticket management yet)
+    ticketTier = await prisma.ticketTier.findFirst({
+      where: { eventId }
+    });
+  }
+
+  const isPaid = ticketTier ? ticketTier.priceCents > 0 : false;
+
   // Check if they already RSVP'd
   const existingRsvp = await prisma.rsvp.findFirst({
     where: { eventId, guestEmail }
   });
 
   if (existingRsvp) {
+    // If they have a pending paid RSVP, let them pay
+    if (existingRsvp.status === "PENDING" && existingRsvp.ticketTierId) {
+       return { success: true, requiresPayment: true, rsvpId: existingRsvp.id };
+    }
     throw new Error("You have already RSVP'd to this event!");
   }
 
@@ -39,9 +59,14 @@ export async function submitRsvp(eventId: string, formData: FormData) {
       eventId,
       guestName,
       guestEmail,
-      status: "APPROVED" // Auto-approve for free events
+      ticketTierId: ticketTier?.id,
+      status: isPaid ? "PENDING" : "APPROVED" 
     }
   });
+
+  if (isPaid) {
+    return { success: true, requiresPayment: true, rsvpId: rsvp.id };
+  }
 
   // Generate Ticket QR Code
   // The QR code contains the secure RSVP ID for the scanner to verify
@@ -91,5 +116,5 @@ export async function submitRsvp(eventId: string, formData: FormData) {
   // Revalidate the public event page
   revalidatePath(`/[locale]/event/[slug]`, 'page');
   
-  return { success: true, rsvpId: rsvp.id };
+  return { success: true, requiresPayment: false, rsvpId: rsvp.id };
 }

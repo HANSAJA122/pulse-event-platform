@@ -10,7 +10,8 @@ export default async function PublicEventPage({
   const { slug } = await params;
   
   const event = await prisma.event.findUnique({
-    where: { slug }
+    where: { slug },
+    include: { ticketTiers: true }
   });
 
   if (!event) {
@@ -60,7 +61,7 @@ export default async function PublicEventPage({
               </div>
             </div>
 
-            <RsvpForm eventId={event.id} />
+            <RsvpForm eventId={event.id} ticketTiers={event.ticketTiers} />
           </div>
 
           <div className="prose prose-invert max-w-none border-t border-white/10 pt-12">

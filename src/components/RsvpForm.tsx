@@ -2,11 +2,15 @@
 
 import { useState } from "react";
 import { submitRsvp } from "@/lib/actions/rsvp";
+import { createCheckoutSession } from "@/lib/actions/checkout";
 
-export function RsvpForm({ eventId }: { eventId: string }) {
+export function RsvpForm({ eventId, ticketTiers }: { eventId: string, ticketTiers?: any[] }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error" | "redirecting">("idle");
   const [errorMsg, setErrorMsg] = useState("");
+  
+  // Default to first tier if available
+  const [selectedTierId, setSelectedTierId] = useState(ticketTiers && ticketTiers.length > 0 ? ticketTiers[0].id : "");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -15,8 +19,19 @@ export function RsvpForm({ eventId }: { eventId: string }) {
     
     try {
       const formData = new FormData(e.currentTarget);
-      await submitRsvp(eventId, formData);
-      setStatus("success");
+      if (selectedTierId) {
+        formData.set("ticketTierId", selectedTierId);
+      }
+      
+      const res = await submitRsvp(eventId, formData);
+      
+      if (res.requiresPayment && res.rsvpId) {
+        setStatus("redirecting");
+        await createCheckoutSession(res.rsvpId);
+        // Will never reach here because createCheckoutSession throws redirect
+      } else {
+        setStatus("success");
+      }
     } catch (err: any) {
       console.error(err);
       setStatus("error");
@@ -30,6 +45,16 @@ export function RsvpForm({ eventId }: { eventId: string }) {
         <div className="w-12 h-12 rounded-full bg-green-400/20 text-green-400 flex items-center justify-center mx-auto mb-4 text-xl">✓</div>
         <h3 className="text-xl font-bold text-white mb-2">You're in!</h3>
         <p className="text-white/70 text-sm">Check your email for your ticket and QR code.</p>
+      </div>
+    );
+  }
+
+  if (status === "redirecting") {
+    return (
+      <div className="w-full md:w-auto p-6 rounded-2xl bg-white/10 border border-white/20 text-center animate-fade-in flex flex-col items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-4 border-white/20 border-t-white animate-spin mb-4" />
+        <h3 className="text-xl font-bold text-white mb-2">Redirecting to Stripe...</h3>
+        <p className="text-white/70 text-sm">Please wait while we secure your ticket.</p>
       </div>
     );
   }
@@ -77,19 +102,45 @@ export function RsvpForm({ eventId }: { eventId: string }) {
             className="w-full py-2.5 px-4 rounded-xl bg-black/50 border border-white/10 focus:outline-none focus:border-white/30 text-white placeholder:text-white/20"
           />
         </div>
+        
+        {ticketTiers && ticketTiers.length > 0 && (
+          <div className="flex flex-col gap-2 mt-2">
+            <label className="text-sm font-bold text-white/70 mb-1">Select Ticket</label>
+            <div className="flex flex-col gap-2">
+              {ticketTiers.map(tier => (
+                <label key={tier.id} className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${selectedTierId === tier.id ? 'bg-white/10 border-white/50' : 'bg-black/50 border-white/10 hover:border-white/30'}`}>
+                  <div className="flex items-center gap-3">
+                    <input 
+                      type="radio" 
+                      name="ticketTier" 
+                      value={tier.id}
+                      checked={selectedTierId === tier.id}
+                      onChange={() => setSelectedTierId(tier.id)}
+                      className="w-4 h-4 accent-pink-500"
+                    />
+                    <span className="text-white font-medium">{tier.name}</span>
+                  </div>
+                  <span className="font-mono font-bold text-white">
+                    {tier.priceCents === 0 ? "Free" : `$${(tier.priceCents / 100).toFixed(2)}`}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
 
-        <div className="flex gap-3 mt-2">
+        <div className="flex gap-3 mt-4">
           <button 
             type="button"
             onClick={() => setIsOpen(false)}
-            disabled={status === "loading"}
+            disabled={status === "loading" || status === "redirecting"}
             className="flex-1 py-3 rounded-xl border border-white/10 text-white/70 hover:bg-white/5 transition-colors text-sm font-bold disabled:opacity-50"
           >
             Cancel
           </button>
           <button 
             type="submit"
-            disabled={status === "loading"}
+            disabled={status === "loading" || status === "redirecting"}
             className="flex-1 py-3 rounded-xl bg-white text-black hover:bg-gray-200 transition-colors text-sm font-bold disabled:opacity-50"
           >
             {status === "loading" ? "..." : "Confirm"}
