@@ -6,7 +6,7 @@ import { createCheckoutSession } from "@/lib/actions/checkout";
 
 export function RsvpForm({ eventId, ticketTiers }: { eventId: string, ticketTiers?: any[] }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error" | "redirecting">("idle");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
   
   // Default to first tier if available
@@ -24,14 +24,7 @@ export function RsvpForm({ eventId, ticketTiers }: { eventId: string, ticketTier
       }
       
       const res = await submitRsvp(eventId, formData);
-      
-      if (res.requiresPayment && res.rsvpId) {
-        setStatus("redirecting");
-        await createCheckoutSession(res.rsvpId);
-        // Will never reach here because createCheckoutSession throws redirect
-      } else {
-        setStatus("success");
-      }
+      setStatus("success");
     } catch (err: any) {
       console.error(err);
       setStatus("error");
@@ -49,15 +42,7 @@ export function RsvpForm({ eventId, ticketTiers }: { eventId: string, ticketTier
     );
   }
 
-  if (status === "redirecting") {
-    return (
-      <div className="w-full md:w-auto p-6 rounded-2xl bg-white/10 border border-white/20 text-center animate-fade-in flex flex-col items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-4 border-white/20 border-t-white animate-spin mb-4" />
-        <h3 className="text-xl font-bold text-white mb-2">Redirecting to Stripe...</h3>
-        <p className="text-white/70 text-sm">Please wait while we secure your ticket.</p>
-      </div>
-    );
-  }
+
 
   if (!isOpen) {
     return (
@@ -107,14 +92,14 @@ export function RsvpForm({ eventId, ticketTiers }: { eventId: string, ticketTier
           <button 
             type="button"
             onClick={() => setIsOpen(false)}
-            disabled={status === "loading" || status === "redirecting"}
+            disabled={status === "loading"}
             className="flex-1 py-3 rounded-xl border border-white/10 text-white/70 hover:bg-white/5 transition-colors text-sm font-bold disabled:opacity-50"
           >
             Cancel
           </button>
           <button 
             type="submit"
-            disabled={status === "loading" || status === "redirecting"}
+            disabled={status === "loading"}
             className="flex-1 py-3 rounded-xl bg-white text-black hover:bg-gray-200 transition-colors text-sm font-bold disabled:opacity-50"
           >
             {status === "loading" ? "..." : "Confirm"}
