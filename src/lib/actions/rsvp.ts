@@ -23,6 +23,7 @@ export async function submitRsvp(eventId: string, formData: FormData) {
   }
 
   // Check capacity if one is set
+  let isWaitlisted = false;
   if (event.capacity !== null) {
     const currentRsvpsCount = await prisma.rsvp.count({
       where: { 
@@ -32,7 +33,7 @@ export async function submitRsvp(eventId: string, formData: FormData) {
     });
 
     if (currentRsvpsCount >= event.capacity) {
-      return { error: "Limit reached! This event is at full capacity." };
+      isWaitlisted = true;
     }
   }
 
@@ -57,7 +58,7 @@ export async function submitRsvp(eventId: string, formData: FormData) {
 
   if (existingRsvp) {
     if (existingRsvp.status === "PENDING" && existingRsvp.ticketTierId) {
-       return { success: true, requiresPayment: true, rsvpId: existingRsvp.id };
+       return { success: true, requiresPayment: true, rsvpId: existingRsvp.id, status: existingRsvp.status };
     }
     return { error: "You have already RSVP'd to this event!" };
   }
@@ -69,19 +70,19 @@ export async function submitRsvp(eventId: string, formData: FormData) {
       guestName,
       guestEmail,
       ticketTierId: ticketTier?.id,
-      status: isPaid ? "PENDING" : "APPROVED" 
+      status: isWaitlisted ? "WAITLISTED" : (isPaid ? "PENDING" : "APPROVED") 
     }
   });
 
-  if (isPaid) {
-    return { success: true, requiresPayment: true, rsvpId: rsvp.id };
+  if (isPaid && !isWaitlisted) {
+    return { success: true, requiresPayment: true, rsvpId: rsvp.id, status: rsvp.status };
   }
 
   // Send Email with Nodemailer (Gmail)
   try {
     if (!process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD) {
       console.log("No SMTP credentials set. Email was not sent.");
-      return { error: "SMTP credentials not configured. RSVP saved, but email not sent." };
+      return { error: "SMTP credentials not configured. RSVP saved, but email not sent.", status: rsvp.status };
     }
 
     const transporter = nodemailer.createTransport({
@@ -92,36 +93,58 @@ export async function submitRsvp(eventId: string, formData: FormData) {
       },
     });
 
-    const htmlContent = `
-      <div style="font-family: sans-serif; max-w: 600px; margin: 0 auto; padding: 20px;">
-        <h1 style="color: #111;">You're going to ${event.title}!</h1>
-        <p style="color: #666; font-size: 16px;">
-          Hi ${guestName}, we're excited to see you. Please present the QR code below at the door.
-        </p>
-        <div style="text-align: center; margin: 40px 0;">
-          <img src="https://quickchart.io/qr?text=${rsvp.id}&size=400" width="200" height="200" alt="Your Ticket QR Code" style="border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);" />
-          <p style="font-family: monospace; color: #888; margin-top: 10px;">${rsvp.id}</p>
+    let htmlContent = "";
+    let subject = "";
+
+    if (isWaitlisted) {
+      subject = `Waitlist Confirmation for ${event.title}`;
+      htmlContent = `
+        <div style="font-family: sans-serif; max-w: 600px; margin: 0 auto; padding: 20px;">
+          <h1 style="color: #111;">You're on the waitlist!</h1>
+          <p style="color: #666; font-size: 16px;">
+            Hi ${guestName}, this event is currently at full capacity, but we've added you to the waitlist.
+          </p>
+          <p style="color: #666; font-size: 16px;">
+            If a spot opens up, we will notify you immediately. Hang tight!
+          </p>
+          <p style="color: #999; font-size: 12px; text-align: center; margin-top: 40px;">
+            Powered by Pulse Event Platform
+          </p>
         </div>
-        <p style="color: #999; font-size: 12px; text-align: center;">
-          Powered by Pulse Event Platform
-        </p>
-      </div>
-    `;
+      `;
+    } else {
+      subject = `Your Ticket to ${event.title}`;
+      htmlContent = `
+        <div style="font-family: sans-serif; max-w: 600px; margin: 0 auto; padding: 20px;">
+          <h1 style="color: #111;">You're going to ${event.title}!</h1>
+          <p style="color: #666; font-size: 16px;">
+            Hi ${guestName}, we're excited to see you. Please present the QR code below at the door.
+          </p>
+          <div style="text-align: center; margin: 40px 0;">
+            <img src="https://quickchart.io/qr?text=${rsvp.id}&size=400" width="200" height="200" alt="Your Ticket QR Code" style="border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);" />
+            <p style="font-family: monospace; color: #888; margin-top: 10px;">${rsvp.id}</p>
+          </div>
+          <p style="color: #999; font-size: 12px; text-align: center;">
+            Powered by Pulse Event Platform
+          </p>
+        </div>
+      `;
+    }
 
     await transporter.sendMail({
       from: `"Pulse Tickets" <${process.env.SMTP_EMAIL}>`,
       to: guestEmail,
-      subject: `Your Ticket to ${event.title}`,
+      subject: subject,
       html: htmlContent,
     });
 
   } catch (error: any) {
     console.error("Failed to send email:", error);
-    return { error: `Failed to send email. Check your SMTP credentials. Error: ${error.message || 'Unknown'}` };
+    return { error: `Failed to send email. Check your SMTP credentials. Error: ${error.message || 'Unknown'}`, status: rsvp.status };
   }
 
   // Revalidate the public event page
   revalidatePath(`/[locale]/event/[slug]`, 'page');
   
-  return { success: true, requiresPayment: false, rsvpId: rsvp.id };
+  return { success: true, requiresPayment: false, rsvpId: rsvp.id, status: rsvp.status };
 }

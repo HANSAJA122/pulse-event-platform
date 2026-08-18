@@ -19,7 +19,7 @@ export default async function PublicEventPage({
   }
 
   // Calculate if the event is full
-  let isSoldOut = false;
+  let isAtCapacity = false;
   if (event.capacity !== null) {
     const currentRsvpsCount = await prisma.rsvp.count({
       where: { 
@@ -27,7 +27,7 @@ export default async function PublicEventPage({
         status: { in: ["APPROVED", "PENDING"] }
       }
     });
-    isSoldOut = currentRsvpsCount >= event.capacity;
+    isAtCapacity = currentRsvpsCount >= event.capacity;
   }
 
   // Format date nicely
@@ -73,7 +73,7 @@ export default async function PublicEventPage({
               </div>
             </div>
 
-            <RsvpForm eventId={event.id} ticketTiers={event.ticketTiers} isSoldOut={isSoldOut} />
+            <RsvpForm eventId={event.id} ticketTiers={event.ticketTiers} isAtCapacity={isAtCapacity} />
           </div>
 
           <div className="prose prose-invert max-w-none border-t border-white/10 pt-12">

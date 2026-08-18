@@ -139,6 +139,10 @@ export default async function EventDashboard({ params }: { params: Promise<{ id:
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-green-500/20 text-green-400 text-xs font-bold">
                           <CheckCircle2 className="w-3 h-3" /> Checked In
                         </span>
+                      ) : rsvp.status === "WAITLISTED" ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#F9CB28]/20 text-[#F9CB28] text-xs font-bold">
+                          Waitlisted
+                        </span>
                       ) : (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/10 text-white/70 text-xs font-bold">
                           Registered

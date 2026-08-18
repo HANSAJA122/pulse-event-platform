@@ -4,9 +4,9 @@ import { useState } from "react";
 import { submitRsvp } from "@/lib/actions/rsvp";
 import { createCheckoutSession } from "@/lib/actions/checkout";
 
-export function RsvpForm({ eventId, ticketTiers, isSoldOut }: { eventId: string, ticketTiers?: any[], isSoldOut?: boolean }) {
+export function RsvpForm({ eventId, ticketTiers, isAtCapacity }: { eventId: string, ticketTiers?: any[], isAtCapacity?: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "waitlist_success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
   
   // Default to first tier if available
@@ -14,7 +14,6 @@ export function RsvpForm({ eventId, ticketTiers, isSoldOut }: { eventId: string,
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (isSoldOut) return;
     setStatus("loading");
     setErrorMsg("");
     
@@ -28,6 +27,8 @@ export function RsvpForm({ eventId, ticketTiers, isSoldOut }: { eventId: string,
       if (res.error) {
         setStatus("error");
         setErrorMsg(res.error);
+      } else if (res.status === "WAITLISTED") {
+        setStatus("waitlist_success");
       } else {
         setStatus("success");
       }
@@ -48,11 +49,12 @@ export function RsvpForm({ eventId, ticketTiers, isSoldOut }: { eventId: string,
     );
   }
 
-  if (isSoldOut) {
+  if (status === "waitlist_success") {
     return (
-      <div className="w-full md:w-auto px-8 py-4 rounded-2xl bg-white/10 text-white/50 font-bold text-lg border border-white/10 text-center flex items-center justify-center gap-2">
-        <span className="w-2 h-2 rounded-full bg-red-500"></span>
-        Sold Out
+      <div className="w-full md:w-auto p-6 rounded-2xl bg-white/10 border border-[#F9CB28]/30 text-center animate-fade-in">
+        <div className="w-12 h-12 rounded-full bg-[#F9CB28]/20 text-[#F9CB28] flex items-center justify-center mx-auto mb-4 text-xl">⏳</div>
+        <h3 className="text-xl font-bold text-white mb-2">You're on the Waitlist!</h3>
+        <p className="text-white/70 text-sm">We've sent you a confirmation email. We'll let you know if a spot opens up.</p>
       </div>
     );
   }
@@ -63,14 +65,16 @@ export function RsvpForm({ eventId, ticketTiers, isSoldOut }: { eventId: string,
         onClick={() => setIsOpen(true)}
         className="w-full md:w-auto px-8 py-4 rounded-2xl bg-aurora-gradient text-white font-bold text-lg shadow-[0_0_30px_rgba(255,77,77,0.3)] hover:shadow-[0_0_40px_rgba(121,40,202,0.4)] transition-all transform hover:scale-105 active:scale-95 text-center"
       >
-        RSVP Now
+        {isAtCapacity ? "Join Waitlist" : "RSVP Now"}
       </button>
     );
   }
 
   return (
     <div className="w-full md:w-auto p-6 rounded-3xl bg-white/5 border border-white/10 shadow-2xl animate-fade-in backdrop-blur-md min-w-[300px]">
-      <h3 className="text-xl font-bold text-white mb-4">Complete Registration</h3>
+      <h3 className="text-xl font-bold text-white mb-4">
+        {isAtCapacity ? "Join Waitlist" : "Complete Registration"}
+      </h3>
       
       {status === "error" && (
         <div className="p-3 mb-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-200 text-sm">
