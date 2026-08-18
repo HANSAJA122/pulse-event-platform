@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import Image from "next/image";
+import { RsvpForm } from "@/components/RsvpForm";
 
 export default async function PublicEventPage({
   params,
@@ -60,9 +60,7 @@ export default async function PublicEventPage({
               </div>
             </div>
 
-            <button className="w-full md:w-auto px-8 py-4 rounded-2xl bg-aurora-gradient text-white font-bold text-lg shadow-[0_0_30px_rgba(255,77,77,0.3)] hover:shadow-[0_0_40px_rgba(121,40,202,0.4)] transition-all transform hover:scale-105 active:scale-95 text-center">
-              RSVP Now
-            </button>
+            <RsvpForm eventId={event.id} />
           </div>
 
           <div className="prose prose-invert max-w-none border-t border-white/10 pt-12">
