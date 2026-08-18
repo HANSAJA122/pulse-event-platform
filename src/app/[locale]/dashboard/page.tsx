@@ -60,7 +60,7 @@ export default async function DashboardIndex() {
           events.map((event) => (
             <Link 
               key={event.id}
-              href={`/dashboard/events/${event.id}/edit`} 
+              href={`/dashboard/events/${event.id}`} 
               className="group glass-panel-interactive rounded-3xl p-6 flex flex-col h-64"
             >
               <div className="flex justify-between items-start mb-auto">

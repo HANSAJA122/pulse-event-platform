@@ -2,54 +2,49 @@
 
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
+import { revalidatePath } from "next/cache";
 
-export async function checkinGuest(eventId: string, rsvpId: string) {
+export async function checkInGuest(rsvpId: string, eventId: string) {
   const session = await auth();
   if (!session?.user?.id) {
-    throw new Error("Unauthorized: Must be logged in to check-in guests.");
+    return { error: "Unauthorized" };
   }
 
-  // 1. Verify the RSVP exists and belongs to this event
+  // Verify the user owns this event
+  const event = await prisma.event.findUnique({
+    where: { id: eventId, ownerId: session.user.id }
+  });
+
+  if (!event) {
+    return { error: "Event not found or unauthorized" };
+  }
+
+  // Find the RSVP
   const rsvp = await prisma.rsvp.findUnique({
-    where: { id: rsvpId }
+    where: { id: rsvpId, eventId }
   });
 
   if (!rsvp) {
-    throw new Error("Invalid Ticket: Ticket not found in the database.");
+    return { error: "Invalid ticket for this event!" };
   }
 
-  if (rsvp.eventId !== eventId) {
-    throw new Error("Invalid Ticket: This ticket is for a different event.");
-  }
-
-  // 2. Verify they aren't already checked in
   if (rsvp.checkedInAt) {
-    // Format the time they checked in
-    const time = new Date(rsvp.checkedInAt).toLocaleTimeString();
-    throw new Error(`Already Checked In at ${time}`);
+    return { 
+      error: `Ticket already used! Checked in on ${new Date(rsvp.checkedInAt).toLocaleString()}` 
+    };
   }
 
-  // 3. Mark as checked in
+  // Check in the guest
   await prisma.rsvp.update({
     where: { id: rsvpId },
     data: { 
       checkedInAt: new Date(),
-      checkedInOffline: false
+      checkedInOffline: true // Just a flag if we want it
     }
   });
 
-  // 4. Log the scan (optional auditing)
-  await prisma.checkinLog.create({
-    data: {
-      rsvpId,
-      deviceId: "web-scanner",
-      timestamp: new Date()
-    }
-  });
+  // Revalidate the dashboard
+  revalidatePath(`/dashboard/events/${eventId}`);
 
-  return { 
-    success: true, 
-    guestName: rsvp.guestName,
-    guestEmail: rsvp.guestEmail
-  };
+  return { success: true, guestName: rsvp.guestName };
 }
