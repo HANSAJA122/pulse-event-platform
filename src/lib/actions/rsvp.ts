@@ -89,7 +89,7 @@ export async function submitRsvp(eventId: string, formData: FormData) {
       console.log(`QR Code generated for RSVP ID: ${rsvp.id}`);
     } else {
       await resend.emails.send({
-        from: 'Pulse Tickets <tickets@pulse.dev>', // Needs a verified domain in Resend
+        from: 'Pulse Tickets <onboarding@resend.dev>', // Resend's default testing email
         to: guestEmail,
         subject: `Your Ticket to ${event.title}`,
         html: `
