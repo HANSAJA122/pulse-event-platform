@@ -88,7 +88,7 @@ export async function submitRsvp(eventId: string, formData: FormData) {
       console.log(`Mock Email sent to: ${guestEmail}`);
       console.log(`QR Code generated for RSVP ID: ${rsvp.id}`);
     } else {
-      await resend.emails.send({
+      const emailRes = await resend.emails.send({
         from: 'Pulse Tickets <onboarding@resend.dev>', // Resend's default testing email
         to: guestEmail,
         subject: `Your Ticket to ${event.title}`,
@@ -105,13 +105,16 @@ export async function submitRsvp(eventId: string, formData: FormData) {
             <p style="color: #999; font-size: 12px; text-align: center;">
               Powered by Pulse Event Platform
             </p>
-          </div>
-        `
       });
+      
+      // If Resend returns an error in the payload
+      if (emailRes.error) {
+        return { error: `Email failed to send: ${emailRes.error.message}` };
+      }
     }
-  } catch (error) {
-    console.error("Failed to send email. Ensure you have a valid RESEND_API_KEY and verified domain.", error);
-    // We don't throw here because we still want the user to know their RSVP succeeded
+  } catch (error: any) {
+    console.error("Failed to send email:", error);
+    return { error: `Failed to send email. Check your Resend API Key or domain verification. Error: ${error.message || 'Unknown'}` };
   }
 
   // Revalidate the public event page
