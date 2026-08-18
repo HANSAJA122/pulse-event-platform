@@ -1,10 +1,8 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { Resend } from "resend";
 import { revalidatePath } from "next/cache";
-
-const resend = new Resend(process.env.RESEND_API_KEY || "re_mock_key_123");
+import nodemailer from "nodemailer";
 
 export async function submitRsvp(eventId: string, formData: FormData) {
   const guestName = formData.get("guestName") as string;
@@ -31,13 +29,11 @@ export async function submitRsvp(eventId: string, formData: FormData) {
       where: { id: ticketTierId }
     });
   } else {
-    // Just find any ticket tier (useful if we haven't built ticket management yet)
     ticketTier = await prisma.ticketTier.findFirst({
       where: { eventId }
     });
   }
 
-  // Force isPaid to false for testing
   const isPaid = false;
 
   // Check if they already RSVP'd
@@ -46,7 +42,6 @@ export async function submitRsvp(eventId: string, formData: FormData) {
   });
 
   if (existingRsvp) {
-    // If they have a pending paid RSVP, let them pay
     if (existingRsvp.status === "PENDING" && existingRsvp.ticketTierId) {
        return { success: true, requiresPayment: true, rsvpId: existingRsvp.id };
     }
@@ -68,45 +63,47 @@ export async function submitRsvp(eventId: string, formData: FormData) {
     return { success: true, requiresPayment: true, rsvpId: rsvp.id };
   }
 
-
-
-  // Send Email with Resend
-  // If the user hasn't set RESEND_API_KEY, this will fail gracefully
+  // Send Email with Nodemailer (Gmail)
   try {
-    if (!process.env.RESEND_API_KEY) {
-      console.log("No RESEND_API_KEY set. Mocking email send...");
-      console.log(`Mock Email sent to: ${guestEmail}`);
-      console.log(`QR Code generated for RSVP ID: ${rsvp.id}`);
-    } else {
-      const emailRes = await resend.emails.send({
-        from: 'Pulse Tickets <onboarding@resend.dev>', // Resend's default testing email
-        to: guestEmail,
-        subject: `Your Ticket to ${event.title}`,
-        html: `
-          <div style="font-family: sans-serif; max-w: 600px; margin: 0 auto; padding: 20px;">
-            <h1 style="color: #111;">You're going to ${event.title}!</h1>
-            <p style="color: #666; font-size: 16px;">
-              Hi ${guestName}, we're excited to see you. Please present the QR code below at the door.
-            </p>
-            <div style="text-align: center; margin: 40px 0;">
-              <img src="https://quickchart.io/qr?text=${rsvp.id}&size=400" width="200" height="200" alt="Your Ticket QR Code" style="border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);" />
-              <p style="font-family: monospace; color: #888; margin-top: 10px;">${rsvp.id}</p>
-            </div>
-            <p style="color: #999; font-size: 12px; text-align: center;">
-              Powered by Pulse Event Platform
-            </p>
-          </div>
-        `
-      });
-      
-      // If Resend returns an error in the payload
-      if (emailRes.error) {
-        return { error: `Email failed to send: ${emailRes.error.message}` };
-      }
+    if (!process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD) {
+      console.log("No SMTP credentials set. Email was not sent.");
+      return { error: "SMTP credentials not configured. RSVP saved, but email not sent." };
     }
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.SMTP_EMAIL,
+        pass: process.env.SMTP_PASSWORD,
+      },
+    });
+
+    const htmlContent = `
+      <div style="font-family: sans-serif; max-w: 600px; margin: 0 auto; padding: 20px;">
+        <h1 style="color: #111;">You're going to ${event.title}!</h1>
+        <p style="color: #666; font-size: 16px;">
+          Hi ${guestName}, we're excited to see you. Please present the QR code below at the door.
+        </p>
+        <div style="text-align: center; margin: 40px 0;">
+          <img src="https://quickchart.io/qr?text=${rsvp.id}&size=400" width="200" height="200" alt="Your Ticket QR Code" style="border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);" />
+          <p style="font-family: monospace; color: #888; margin-top: 10px;">${rsvp.id}</p>
+        </div>
+        <p style="color: #999; font-size: 12px; text-align: center;">
+          Powered by Pulse Event Platform
+        </p>
+      </div>
+    `;
+
+    await transporter.sendMail({
+      from: `"Pulse Tickets" <${process.env.SMTP_EMAIL}>`,
+      to: guestEmail,
+      subject: `Your Ticket to ${event.title}`,
+      html: htmlContent,
+    });
+
   } catch (error: any) {
     console.error("Failed to send email:", error);
-    return { error: `Failed to send email. Check your Resend API Key or domain verification. Error: ${error.message || 'Unknown'}` };
+    return { error: `Failed to send email. Check your SMTP credentials. Error: ${error.message || 'Unknown'}` };
   }
 
   // Revalidate the public event page
