@@ -36,7 +36,7 @@ export default async function PublicEventPage({
     owner: {
       name: "Demo Host",
       username: "demo",
-      avatarUrl: null
+      image: null
     }
   };
 
@@ -64,8 +64,8 @@ export default async function PublicEventPage({
             
             <div className="flex items-center gap-4 mb-8 p-4 rounded-2xl bg-pulse-slate/10 border border-pulse-slate/30">
                <div className="w-12 h-12 rounded-full bg-pulse-slate/50 flex items-center justify-center font-display font-bold shrink-0">
-                 {event.owner.avatarUrl ? (
-                   <img src={event.owner.avatarUrl} alt="" className="w-full h-full object-cover rounded-full" />
+                 {event.owner.image ? (
+                   <img src={event.owner.image} alt="" className="w-full h-full object-cover rounded-full" />
                  ) : (
                    event.owner.name[0]
                  )}

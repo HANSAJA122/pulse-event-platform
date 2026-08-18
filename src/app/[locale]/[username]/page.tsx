@@ -27,7 +27,7 @@ export default async function ProfilePage({
       name: "Demo Host",
       username: username,
       bio: "Hosting the best tech events in SF.",
-      avatarUrl: null,
+      image: null,
       id: "demo",
       email: "demo@example.com",
       createdAt: new Date(),
@@ -46,8 +46,8 @@ export default async function ProfilePage({
       <main className="max-w-5xl mx-auto px-6 py-12">
         <div className="flex flex-col md:flex-row gap-8 items-start mb-16">
           <div className="w-24 h-24 rounded-full bg-pulse-slate/50 overflow-hidden shrink-0 flex items-center justify-center text-3xl font-display font-bold">
-            {user.avatarUrl ? (
-              <img src={user.avatarUrl} alt={user.name || ""} className="w-full h-full object-cover" />
+            {user.image ? (
+              <img src={user.image} alt={user.name || ""} className="w-full h-full object-cover" />
             ) : (
               (user.name || username)[0].toUpperCase()
             )}
