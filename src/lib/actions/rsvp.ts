@@ -2,7 +2,6 @@
 
 import { prisma } from "@/lib/prisma";
 import { Resend } from "resend";
-import QRCode from "qrcode";
 import { revalidatePath } from "next/cache";
 
 const resend = new Resend(process.env.RESEND_API_KEY || "re_mock_key_123");
@@ -69,16 +68,7 @@ export async function submitRsvp(eventId: string, formData: FormData) {
     return { success: true, requiresPayment: true, rsvpId: rsvp.id };
   }
 
-  // Generate Ticket QR Code
-  // The QR code contains the secure RSVP ID for the scanner to verify
-  const qrCodeDataUrl = await QRCode.toDataURL(rsvp.id, {
-    width: 400,
-    margin: 2,
-    color: {
-      dark: '#000000',
-      light: '#ffffff'
-    }
-  });
+
 
   // Send Email with Resend
   // If the user hasn't set RESEND_API_KEY, this will fail gracefully
@@ -99,7 +89,7 @@ export async function submitRsvp(eventId: string, formData: FormData) {
               Hi ${guestName}, we're excited to see you. Please present the QR code below at the door.
             </p>
             <div style="text-align: center; margin: 40px 0;">
-              <img src="${qrCodeDataUrl}" alt="Your Ticket QR Code" style="border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);" />
+              <img src="https://quickchart.io/qr?text=${rsvp.id}&size=400" width="200" height="200" alt="Your Ticket QR Code" style="border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);" />
               <p style="font-family: monospace; color: #888; margin-top: 10px;">${rsvp.id}</p>
             </div>
             <p style="color: #999; font-size: 12px; text-align: center;">
