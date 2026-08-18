@@ -1,8 +1,6 @@
 import { notFound } from "next/navigation";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { Link } from "@/i18n/routing";
-
-const prisma = new PrismaClient();
 
 export async function generateMetadata({ params }: { params: Promise<{ eventSlug: string }> }) {
   const { eventSlug } = await params;
