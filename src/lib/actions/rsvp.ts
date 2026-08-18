@@ -38,7 +38,8 @@ export async function submitRsvp(eventId: string, formData: FormData) {
     });
   }
 
-  const isPaid = ticketTier ? ticketTier.priceCents > 0 : false;
+  // Force isPaid to false for testing
+  const isPaid = false;
 
   // Check if they already RSVP'd
   const existingRsvp = await prisma.rsvp.findFirst({

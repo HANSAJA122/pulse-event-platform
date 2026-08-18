@@ -103,32 +103,6 @@ export function RsvpForm({ eventId, ticketTiers }: { eventId: string, ticketTier
           />
         </div>
         
-        {ticketTiers && ticketTiers.length > 0 && (
-          <div className="flex flex-col gap-2 mt-2">
-            <label className="text-sm font-bold text-white/70 mb-1">Select Ticket</label>
-            <div className="flex flex-col gap-2">
-              {ticketTiers.map(tier => (
-                <label key={tier.id} className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${selectedTierId === tier.id ? 'bg-white/10 border-white/50' : 'bg-black/50 border-white/10 hover:border-white/30'}`}>
-                  <div className="flex items-center gap-3">
-                    <input 
-                      type="radio" 
-                      name="ticketTier" 
-                      value={tier.id}
-                      checked={selectedTierId === tier.id}
-                      onChange={() => setSelectedTierId(tier.id)}
-                      className="w-4 h-4 accent-pink-500"
-                    />
-                    <span className="text-white font-medium">{tier.name}</span>
-                  </div>
-                  <span className="font-mono font-bold text-white">
-                    {tier.priceCents === 0 ? "Free" : `$${(tier.priceCents / 100).toFixed(2)}`}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-        )}
-
         <div className="flex gap-3 mt-4">
           <button 
             type="button"
