@@ -11,7 +11,7 @@ export function DashboardSidebar() {
     <aside className="w-full md:w-64 border-r border-pulse-border bg-black p-6 flex flex-col gap-8 h-full md:h-screen sticky top-0">
       <Link href="/dashboard" className="font-display font-bold text-2xl tracking-tight text-white flex items-center gap-2">
         <div className="w-3 h-3 bg-white rounded-full"></div>
-        Pulse
+        SEBEE
       </Link>
       
       <nav className="flex flex-col gap-2">

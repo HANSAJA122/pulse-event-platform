@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/routing";
+import { prisma } from "@/lib/prisma";
+import { updateEvent } from "@/lib/actions/event";
 
 export default async function EditEventPage({
   params,
@@ -8,71 +10,83 @@ export default async function EditEventPage({
 }) {
   const { id } = await params;
   
-  // Placeholder data since DB is not connected yet
-  const event = {
-    id,
-    title: "Frontend Founders Meetup",
-    startAt: new Date().toISOString().slice(0, 16),
-    endAt: new Date(Date.now() + 7200000).toISOString().slice(0, 16),
-    locationType: "PHYSICAL",
-    description: "An evening of talks and networking."
+  const event = await prisma.event.findUnique({
+    where: { id }
+  });
+
+  if (!event) {
+    notFound();
+  }
+
+  const updateWithId = updateEvent.bind(null, event.id);
+
+  // Helper to format Date for datetime-local input
+  const formatForInput = (d: Date) => {
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
   };
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
-      <div className="flex items-center gap-4 mb-8">
-        <Link href="/dashboard" className="text-pulse-text/50 hover:text-pulse-text transition-colors">
-          &larr; Back
+    <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-8">
+      <div>
+        <Link href="/dashboard" className="text-pulse-text-muted hover:text-white transition-colors text-sm font-medium mb-4 inline-block">
+          &larr; Back to Events
         </Link>
-        <h1 className="text-3xl font-display font-bold">Edit Event</h1>
+        <h1 className="text-4xl font-display font-bold tracking-tight">Edit Event</h1>
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 flex flex-col gap-8">
           {/* Basics Form */}
-          <section className="bg-pulse-bg border border-pulse-slate/50 p-6 rounded-2xl">
-            <h2 className="text-xl font-bold font-display mb-4 text-pulse-cyan">Basics</h2>
-            <form className="flex flex-col gap-6">
-              <div className="flex flex-col gap-2">
-                <label className="font-medium text-pulse-text/80">Event Title</label>
+          <section className="glass-panel p-6 md:p-8 rounded-3xl">
+            <h2 className="text-xl font-bold font-display mb-6">Basics</h2>
+            <form action={updateWithId} className="flex flex-col gap-6">
+              <div className="flex flex-col gap-3">
+                <label className="font-bold text-white tracking-tight">Event Title</label>
                 <input 
                   type="text" 
+                  name="title"
                   defaultValue={event.title}
-                  className="w-full py-3 px-4 rounded-xl bg-pulse-bg border border-pulse-slate focus:outline-none focus:border-pulse-cyan transition-colors"
+                  required
+                  className="w-full py-3 px-4 rounded-xl bg-black/50 border border-white/10 focus:outline-none focus:border-white/30 transition-colors text-white/90"
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="flex flex-col gap-2">
-                  <label className="font-medium text-pulse-text/80">Start Date & Time</label>
+                <div className="flex flex-col gap-3">
+                  <label className="font-bold text-white tracking-tight">Start Date & Time</label>
                   <input 
                     type="datetime-local" 
-                    defaultValue={event.startAt}
-                    className="w-full py-3 px-4 rounded-xl bg-pulse-bg border border-pulse-slate focus:outline-none focus:border-pulse-cyan transition-colors"
+                    name="startAt"
+                    defaultValue={formatForInput(event.startAt)}
+                    required
+                    className="w-full py-3 px-4 rounded-xl bg-black/50 border border-white/10 focus:outline-none focus:border-white/30 transition-colors text-white/90"
                   />
                 </div>
-                <div className="flex flex-col gap-2">
-                  <label className="font-medium text-pulse-text/80">End Date & Time</label>
+                <div className="flex flex-col gap-3">
+                  <label className="font-bold text-white tracking-tight">End Date & Time</label>
                   <input 
                     type="datetime-local" 
-                    defaultValue={event.endAt}
-                    className="w-full py-3 px-4 rounded-xl bg-pulse-bg border border-pulse-slate focus:outline-none focus:border-pulse-cyan transition-colors"
+                    name="endAt"
+                    defaultValue={formatForInput(event.endAt)}
+                    required
+                    className="w-full py-3 px-4 rounded-xl bg-black/50 border border-white/10 focus:outline-none focus:border-white/30 transition-colors text-white/90"
                   />
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2">
-                <label className="font-medium text-pulse-text/80">Description</label>
+              <div className="flex flex-col gap-3">
+                <label className="font-bold text-white tracking-tight">Description</label>
                 <textarea 
+                  name="description"
                   rows={5}
-                  defaultValue={event.description}
-                  className="w-full py-3 px-4 rounded-xl bg-pulse-bg border border-pulse-slate focus:outline-none focus:border-pulse-cyan transition-colors resize-none"
+                  defaultValue={event.description || ""}
+                  className="w-full py-3 px-4 rounded-xl bg-black/50 border border-white/10 focus:outline-none focus:border-white/30 transition-colors resize-none text-white/90 placeholder:text-white/20"
                 />
               </div>
               
-              <div className="flex justify-end">
-                <button type="button" className="px-6 py-2 rounded-xl bg-pulse-slate/20 hover:bg-pulse-slate/40 transition-colors font-medium">
-                  Save Basics
+              <div className="pt-6 mt-2 border-t border-white/10 flex justify-end">
+                <button type="submit" className="px-8 py-3 rounded-xl bg-white text-black hover:bg-gray-200 transition-colors font-bold shadow-lg">
+                  Save Changes
                 </button>
               </div>
             </form>
@@ -81,60 +95,60 @@ export default async function EditEventPage({
 
         {/* Sidebar settings */}
         <div className="flex flex-col gap-4">
-           <Link href={`/dashboard/events/${id}/form`} className="p-4 border border-pulse-slate/50 bg-pulse-slate/10 rounded-xl hover:border-pulse-cyan/50 hover:bg-pulse-slate/20 transition-all flex justify-between items-center group">
+           <Link href={`/dashboard/events/${id}/form`} className="p-5 border border-white/10 bg-white/5 rounded-2xl hover:bg-white/10 transition-all flex justify-between items-center group">
             <div>
               <h3 className="font-bold">Registration Form</h3>
-              <p className="text-sm text-pulse-text/50">Custom questions</p>
+              <p className="text-sm text-pulse-text-muted">Custom questions</p>
             </div>
-            <span className="text-pulse-cyan group-hover:translate-x-1 transition-transform">&rarr;</span>
+            <span className="text-white/50 group-hover:text-white group-hover:translate-x-1 transition-all">&rarr;</span>
           </Link>
 
-           <Link href={`/dashboard/events/${id}/schedule`} className="p-4 border border-pulse-slate/50 bg-pulse-slate/10 rounded-xl hover:border-pulse-cyan/50 hover:bg-pulse-slate/20 transition-all flex justify-between items-center group">
+           <Link href={`/dashboard/events/${id}/schedule`} className="p-5 border border-white/10 bg-white/5 rounded-2xl hover:bg-white/10 transition-all flex justify-between items-center group">
             <div>
               <h3 className="font-bold">Event Schedule</h3>
-              <p className="text-sm text-pulse-text/50">Agenda & tracks</p>
+              <p className="text-sm text-pulse-text-muted">Agenda & tracks</p>
             </div>
-            <span className="text-pulse-cyan group-hover:translate-x-1 transition-transform">&rarr;</span>
+            <span className="text-white/50 group-hover:text-white group-hover:translate-x-1 transition-all">&rarr;</span>
           </Link>
 
-           <Link href={`/dashboard/events/${id}/sponsors`} className="p-4 border border-pulse-slate/50 bg-pulse-slate/10 rounded-xl hover:border-pulse-cyan/50 hover:bg-pulse-slate/20 transition-all flex justify-between items-center group">
+           <Link href={`/dashboard/events/${id}/sponsors`} className="p-5 border border-white/10 bg-white/5 rounded-2xl hover:bg-white/10 transition-all flex justify-between items-center group">
             <div>
               <h3 className="font-bold">Sponsors</h3>
-              <p className="text-sm text-pulse-text/50">Manage partners</p>
+              <p className="text-sm text-pulse-text-muted">Manage partners</p>
             </div>
-            <span className="text-pulse-cyan group-hover:translate-x-1 transition-transform">&rarr;</span>
+            <span className="text-white/50 group-hover:text-white group-hover:translate-x-1 transition-all">&rarr;</span>
           </Link>
 
-           <Link href={`/dashboard/events/${id}/analytics`} className="p-4 border border-pulse-slate/50 bg-pulse-slate/10 rounded-xl hover:border-pulse-cyan/50 hover:bg-pulse-slate/20 transition-all flex justify-between items-center group">
+           <Link href={`/dashboard/events/${id}/analytics`} className="p-5 border border-white/10 bg-white/5 rounded-2xl hover:bg-white/10 transition-all flex justify-between items-center group">
             <div>
               <h3 className="font-bold">Analytics</h3>
-              <p className="text-sm text-pulse-text/50">Views & sales</p>
+              <p className="text-sm text-pulse-text-muted">Views & sales</p>
             </div>
-            <span className="text-pulse-cyan group-hover:translate-x-1 transition-transform">&rarr;</span>
+            <span className="text-white/50 group-hover:text-white group-hover:translate-x-1 transition-all">&rarr;</span>
           </Link>
 
-           <Link href={`/dashboard/events/${id}/promoters`} className="p-4 border border-pulse-slate/50 bg-pulse-slate/10 rounded-xl hover:border-pulse-cyan/50 hover:bg-pulse-slate/20 transition-all flex justify-between items-center group">
+           <Link href={`/dashboard/events/${id}/promoters`} className="p-5 border border-white/10 bg-white/5 rounded-2xl hover:bg-white/10 transition-all flex justify-between items-center group">
             <div>
               <h3 className="font-bold">Promoters</h3>
-              <p className="text-sm text-pulse-text/50">Affiliate tracking</p>
+              <p className="text-sm text-pulse-text-muted">Affiliate tracking</p>
             </div>
-            <span className="text-pulse-cyan group-hover:translate-x-1 transition-transform">&rarr;</span>
+            <span className="text-white/50 group-hover:text-white group-hover:translate-x-1 transition-all">&rarr;</span>
           </Link>
 
-           <Link href={`/dashboard/events/${id}/guests`} className="p-4 border border-pulse-slate/50 bg-pulse-slate/10 rounded-xl hover:border-pulse-cyan/50 hover:bg-pulse-slate/20 transition-all flex justify-between items-center group">
+           <Link href={`/dashboard/events/${id}/guests`} className="p-5 border border-white/10 bg-white/5 rounded-2xl hover:bg-white/10 transition-all flex justify-between items-center group">
             <div>
               <h3 className="font-bold">Guest List</h3>
-              <p className="text-sm text-pulse-text/50">Manage RSVPs</p>
+              <p className="text-sm text-pulse-text-muted">Manage RSVPs</p>
             </div>
-            <span className="text-pulse-cyan group-hover:translate-x-1 transition-transform">&rarr;</span>
+            <span className="text-white/50 group-hover:text-white group-hover:translate-x-1 transition-all">&rarr;</span>
           </Link>
           
-          <Link href={`/dashboard/events/${id}/checkin`} className="p-4 border border-pulse-slate/50 bg-pulse-slate/10 rounded-xl hover:border-pulse-cyan/50 hover:bg-pulse-slate/20 transition-all flex justify-between items-center group">
+          <Link href={`/dashboard/events/${id}/checkin`} className="p-5 border border-white/10 bg-white/5 rounded-2xl hover:bg-white/10 transition-all flex justify-between items-center group">
             <div>
               <h3 className="font-bold">Check-in Mode</h3>
-              <p className="text-sm text-pulse-text/50">Offline scanner</p>
+              <p className="text-sm text-pulse-text-muted">Offline scanner</p>
             </div>
-            <span className="text-pulse-cyan group-hover:translate-x-1 transition-transform">&rarr;</span>
+            <span className="text-white/50 group-hover:text-white group-hover:translate-x-1 transition-all">&rarr;</span>
           </Link>
         </div>
       </div>
